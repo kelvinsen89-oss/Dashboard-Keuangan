@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Keuangan">
+<title>Keuangan Saya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #F5F2EE;
+    --surface: #FFFFFF;
+    --surface-2: #FAF8F5;
+    --border: #E8E3DC;
+    --text-primary: #1A1714;
+    --text-secondary: #6B6560;
+    --text-muted: #9E9890;
+    --red: #C0392B;
+    --red-bg: #FDF0EE;
+    --red-light: #F5C6C0;
+    --blue: #2563EB;
+    --blue-bg: #EEF3FD;
+    --blue-light: #BFCFF8;
+    --green: #16803C;
+    --green-bg: #EDFAF3;
+    --green-light: #BBF0D2;
+    --green2: #0D9158;
+    --green2-bg: #E6F7F0;
+    --amber: #B45309;
+    --amber-bg: #FEF3E2;
+    --amber-light: #FCD396;
+    --accent: #B45309;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 12px rgba(26,23,20,0.07);
+    --shadow-md: 0 4px 24px rgba(26,23,20,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    padding: 16px 20px 14px;
+    padding-top: calc(16px + env(safe-area-inset-top));
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .header-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+  }
+  .header-title span {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .btn-refresh {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--surface-2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    font-size: 18px;
+  }
+  .btn-refresh:active { transform: scale(0.92); background: var(--border); }
+  .btn-refresh.spinning { animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .header-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .month-select {
+    flex: 1;
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--surface-2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 36px 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B6560' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    min-height: 44px;
+  }
+  .header-date-range {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  /* MAIN */
+  .main { padding: 20px 16px 0; max-width: 480px; margin: 0 auto; }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    margin-top: 24px;
+  }
+
+  /* SUMMARY CARDS */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .card.red::before { background: var(--red); }
+  .card.blue::before { background: var(--blue); }
+  .card.green::before { background: var(--green); }
+  .card.green2::before { background: var(--green2); }
+
+  .card-icon { font-size: 20px; margin-bottom: 8px; }
+  .card-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+  .card-value {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+    word-break: break-all;
+  }
+  .card.red .card-value { color: var(--red); }
+  .card.blue .card-value { color: var(--blue); }
+  .card.green .card-value { color: var(--green); }
+  .card.green2 .card-value { color: var(--green2); }
+
+  /* NET CASH FLOW */
+  .cashflow-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
+    margin-top: 10px;
+  }
+  .cashflow-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .cashflow-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+  .cashflow-formula {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .cashflow-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    line-height: 1;
+  }
+  .cashflow-value.surplus { color: var(--green); }
+  .cashflow-value.defisit { color: var(--red); }
+  .cashflow-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+  .cashflow-badge.surplus { background: var(--green-bg); color: var(--green); }
+  .cashflow-badge.defisit { background: var(--red-bg); color: var(--red); }
+  .cashflow-bar-track {
+    width: 100%;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .cashflow-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .cashflow-bar-fill.surplus { background: linear-gradient(90deg, var(--green), #22c55e); }
+  .cashflow-bar-fill.defisit { background: linear-gradient(90deg, var(--red), #ef4444); }
+
+  /* CHART CARD */
+  .chart-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+  }
+  .chart-wrapper { position: relative; }
+
+  /* CATEGORY BARS */
+  .cat-list { display: flex; flex-direction: column; gap: 10px; }
+  .cat-item { }
+  .cat-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .cat-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 8px;
+  }
+  .cat-right {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .cat-amount {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .cat-pct {
+    font-size: 11px;
+    color: var(--text-muted);
+    width: 34px;
+    text-align: right;
+  }
+  .cat-bar-track {
+    width: 100%;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .cat-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #C0392B, #e74c3c);
+    transition: width 0.7s cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+
+  /* REIMBURSE TRACKER */
+  .reimburse-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .reimburse-total {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: var(--blue);
+    letter-spacing: -0.8px;
+    margin-bottom: 4px;
+  }
+  .reimburse-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  .reimburse-list { display: flex; flex-direction: column; gap: 8px; }
+  .reimburse-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    gap: 10px;
+  }
+  .reimburse-item.pending { background: var(--blue-bg); }
+  .reimburse-item.cair { background: var(--green-bg); }
+  .reimburse-item-left { flex: 1; min-width: 0; }
+  .reimburse-item-date {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  .reimburse-item-desc {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .reimburse-item-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .reimburse-item-amount {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .reimburse-item.pending .reimburse-item-amount { color: var(--blue); }
+  .reimburse-item.cair .reimburse-item-amount { color: var(--green); }
+
+  /* BADGES */
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+  .badge.pending { background: var(--amber-bg); color: var(--amber); }
+  .badge.cair { background: var(--green-bg); color: var(--green); }
+  .badge.pribadi { background: var(--red-bg); color: var(--red); }
+  .badge.income { background: var(--green2-bg); color: var(--green2); }
+
+  /* TRANSACTIONS */
+  .txn-section { }
+  .filter-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+  .filter-tab {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    min-height: 36px;
+    transition: all 0.15s;
+  }
+  .filter-tab.active {
+    background: var(--text-primary);
+    color: #fff;
+    border-color: var(--text-primary);
+  }
+  .search-wrap {
+    position: relative;
+    margin-bottom: 12px;
+  }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 16px;
+    pointer-events: none;
+  }
+  .search-input {
+    width: 100%;
+    padding: 12px 14px 12px 38px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+    min-height: 44px;
+    transition: border-color 0.15s;
+  }
+  .search-input:focus { border-color: var(--text-primary); }
+  .search-input::placeholder { color: var(--text-muted); }
+
+  .txn-list { display: flex; flex-direction: column; gap: 8px; }
+  .txn-item {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .txn-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .txn-icon.red { background: var(--red-bg); }
+  .txn-icon.blue { background: var(--blue-bg); }
+  .txn-icon.green { background: var(--green-bg); }
+  .txn-icon.green2 { background: var(--green2-bg); }
+  .txn-body { flex: 1; min-width: 0; }
+  .txn-desc {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .txn-meta {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .txn-date {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .txn-cat {
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+  .txn-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .txn-amount {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .txn-amount.red { color: var(--red); }
+  .txn-amount.blue { color: var(--blue); }
+  .txn-amount.green { color: var(--green); }
+  .txn-amount.green2 { color: var(--green2); }
+
+  /* STATES */
+  .state-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 40px 20px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .state-icon { font-size: 40px; margin-bottom: 12px; }
+  .state-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+  .state-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
+  .btn-retry {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 24px;
+    background: var(--text-primary);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    min-height: 44px;
+  }
+  .btn-retry:active { opacity: 0.85; }
+
+  /* SKELETON */
+  .skeleton {
+    background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 6px;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .skeleton-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    border: 1px solid var(--border);
+  }
+  .sk-line { height: 12px; margin-bottom: 8px; }
+  .sk-line.lg { height: 20px; }
+  .sk-line.w60 { width: 60%; }
+  .sk-line.w80 { width: 80%; }
+  .sk-line.w40 { width: 40%; }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 6px 0;
+  }
+
+  /* EMPTY */
+  .empty-state {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .empty-state .empty-icon { font-size: 32px; margin-bottom: 10px; }
+
+  /* SHOW MORE */
+  .btn-show-more {
+    width: 100%;
+    padding: 14px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-align: center;
+    min-height: 44px;
+    margin-top: 8px;
+  }
+  .btn-show-more:active { background: var(--surface-2); }
+
+  .spacer-bottom { height: 80px; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 200;
+  }
+  .nav-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0;
+    cursor: pointer;
+    gap: 3px;
+    min-height: 56px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+  .nav-tab.active { color: var(--accent); }
+  .nav-tab-icon { font-size: 22px; }
+
+  /* PAGE SECTIONS */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* DOUGHNUT */
+  .doughnut-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .doughnut-canvas-wrap {
+    position: relative;
+    width: 200px; height: 200px;
+  }
+  .doughnut-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+  }
+  .doughnut-center-label { font-size: 11px; color: var(--text-muted); }
+  .doughnut-center-value { font-size: 15px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; }
+  .doughnut-legend { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 10px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-name { flex: 1; font-size: 13px; color: var(--text-primary); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .legend-right { display: flex; gap: 8px; align-items: baseline; flex-shrink: 0; }
+  .legend-amt { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .legend-pct { font-size: 11px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="header-title">Keuangan <span>Saya</span></div>
+    <button class="btn-refresh" id="btnRefresh" onclick="fetchData()" title="Refresh">↻</button>
+  </div>
+  <div class="header-controls">
+    <select class="month-select" id="monthSelect" onchange="applyFilter()">
+      <option value="all">Semua Data</option>
+    </select>
+  </div>
+  <div class="header-date-range" id="dateRange">Memuat data…</div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="mainContent">
+  <!-- Skeleton loading -->
+  <div id="skeletonState">
+    <div class="section-label" style="margin-top:8px">Ringkasan</div>
+    <div class="cards-grid">
+      <div class="skeleton-card"><div class="skeleton sk-line w40"></div><div class="skeleton sk-line lg w80" style="margin-top:10px"></div></div>
+      <div class="skeleton-card"><div class="skeleton sk-line w40"></div><div class="skeleton sk-line lg w80" style="margin-top:10px"></div></div>
+      <div class="skeleton-card"><div class="skeleton sk-line w40"></div><div class="skeleton sk-line lg w80" style="margin-top:10px"></div></div>
+      <div class="skeleton-card"><div class="skeleton sk-line w40"></div><div class="skeleton sk-line lg w80" style="margin-top:10px"></div></div>
+    </div>
+    <div class="section-label">Net Cash Flow</div>
+    <div class="skeleton-card" style="height:120px"><div class="skeleton sk-line w60" style="height:32px;margin-top:20px"></div></div>
+    <div class="section-label">Pengeluaran per Kategori</div>
+    <div class="skeleton-card" style="height:200px"></div>
+  </div>
+
+  <!-- Error state -->
+  <div id="errorState" style="display:none">
+    <div class="state-card">
+      <div class="state-icon">⚠️</div>
+      <div class="state-title">Gagal Memuat Data</div>
+      <div class="state-desc">Gagal memuat data. Cek koneksi atau token.</div>
+      <button class="btn-retry" onclick="fetchData()">↻ &nbsp;Coba Lagi</button>
+    </div>
+  </div>
+
+  <!-- Main dashboard -->
+  <div id="dashboard" style="display:none">
+
+    <!-- PAGE: PRIBADI -->
+    <div class="page active" id="pagePribadi">
+      <div class="section-label" style="margin-top:8px">Pengeluaran & Pemasukan</div>
+      <div class="cards-grid">
+        <div class="card red">
+          <div class="card-icon">💸</div>
+          <div class="card-label">Pengeluaran Pribadi</div>
+          <div class="card-value" id="valPengeluaran">Rp 0</div>
+        </div>
+        <div class="card green">
+          <div class="card-icon">💰</div>
+          <div class="card-label">Pendapatan</div>
+          <div class="card-value" id="valPendapatan">Rp 0</div>
+        </div>
+      </div>
+
+      <div class="section-label">Net Cash Flow</div>
+      <div class="cashflow-card">
+        <div class="cashflow-label">Net Cash Flow</div>
+        <div class="cashflow-formula" id="cashflowFormula">Pendapatan + Reimburse Cair − Pengeluaran Pribadi</div>
+        <div class="cashflow-value" id="cashflowValue">Rp 0</div>
+        <div class="cashflow-badge" id="cashflowBadge">—</div>
+        <div class="cashflow-bar-track">
+          <div class="cashflow-bar-fill" id="cashflowBar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="section-label">Distribusi Pengeluaran Pribadi</div>
+      <div class="chart-card">
+        <div class="doughnut-wrap">
+          <div class="doughnut-canvas-wrap">
+            <canvas id="doughnutChart"></canvas>
+            <div class="doughnut-center">
+              <div class="doughnut-center-label">Total</div>
+              <div class="doughnut-center-value" id="doughnutTotal">Rp 0</div>
+            </div>
+          </div>
+          <div class="doughnut-legend" id="doughnutLegend"></div>
+        </div>
+      </div>
+
+      <div class="section-label">Riwayat Pribadi</div>
+      <div class="txn-section">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" type="search" id="txnSearch" placeholder="Cari transaksi…" oninput="renderTransactions()" autocorrect="off" autocapitalize="none">
+        </div>
+        <div class="txn-list" id="txnList"></div>
+        <button class="btn-show-more" id="btnShowMore" style="display:none" onclick="showMoreTxn()">Tampilkan Lebih Banyak</button>
+      </div>
+      <div class="spacer-bottom"></div>
+    </div>
+
+    <!-- PAGE: REIMBURSE -->
+    <div class="page" id="pageReimburse">
+      <div class="section-label" style="margin-top:8px">Status Reimburse</div>
+      <div class="cards-grid">
+        <div class="card blue">
+          <div class="card-icon">🔄</div>
+          <div class="card-label">Pending (belum cair)</div>
+          <div class="card-value" id="valReimbursePending">Rp 0</div>
+        </div>
+        <div class="card green2">
+          <div class="card-icon">✅</div>
+          <div class="card-label">Sudah Cair</div>
+          <div class="card-value" id="valReimburseCair">Rp 0</div>
+        </div>
+      </div>
+
+      <div class="section-label">Reimburse Tracker</div>
+      <div class="reimburse-card">
+        <div class="reimburse-total" id="reimburseTotal">Rp 0</div>
+        <div class="reimburse-subtitle">Total pending — akan segera kamu terima</div>
+        <div class="reimburse-list" id="reimburseList"></div>
+      </div>
+      <div class="spacer-bottom"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <div class="nav-tab active" id="navPribadi" onclick="switchPage('pribadi')">
+    <span class="nav-tab-icon">💸</span>
+    <span>Pribadi</span>
+  </div>
+  <div class="nav-tab" id="navReimburse" onclick="switchPage('reimburse')">
+    <span class="nav-tab-icon">🔄</span>
+    <span>Reimburse</span>
+  </div>
+</nav>
+
+<script>
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyOIollDLQqWAlTzyoUmAQemNQ3_794XKNVIGPxw-zI9K8KK1CrgJ5wkIlRGmPgBMg/exec';
+const SECRET_TOKEN = 'DashboardKelvinTham27';
+
+let allData = [];
+let filteredData = [];
+let currentMonthFilter = 'all';
+let currentTxnFilter = 'all';
+let txnPage = 20;
+
+// ─── CURRENCY FORMAT ───────────────────────────────────────────────────
+const fmt = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+
+function parseAmount(val) {
+  if (!val) return 0;
+  const s = String(val).replace(/[^0-9.]/g, '');
+  return parseFloat(s) || 0;
+}
+
+// ─── CLASSIFY ──────────────────────────────────────────────────────────
+function classify(row) {
+  const jenis = (row['Jenis Transaksi'] || '').trim();
+  const keterangan = (row['Keterangan Tambahan'] || '').trim();
+  const reimburse = row['Reimbursement'];
+  const isCentang = reimburse === true || String(reimburse).trim().toUpperCase() === 'TRUE' || reimburse === 1;
+
+  if (keterangan.startsWith('[IN] Reimburse')) return 'REIMBURSE_CAIR';
+  if (keterangan.startsWith('[IN] Pendapatan')) return 'PENDAPATAN';
+  if (jenis.includes('avail. reimburse')) {
+    return isCentang ? 'REIMBURSE_CAIR' : 'REIMBURSE_PENDING';
+  }
+  return 'PENGELUARAN_PRIBADI';
+}
+
+// ─── FETCH ─────────────────────────────────────────────────────────────
+async function fetchData() {
+  const btn = document.getElementById('btnRefresh');
+  btn.classList.add('spinning');
+  setLoading(true);
+
+  try {
+    const url = `${WEB_APP_URL}?token=${SECRET_TOKEN}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+
+    let rows = json.data || json;
+    if (!Array.isArray(rows)) throw new Error('Format data tidak dikenali');
+
+    allData = rows.map(row => ({
+      ...row,
+      _type: classify(row),
+      _amount: parseAmount(row['Total Pengeluaran']),
+      _date: parseDate(row['Timestamp'])
+    })).filter(r => r._date);
+
+    allData.sort((a, b) => b._date - a._date);
+
+    buildMonthFilter();
+    applyFilter();
+    setLoading(false);
+  } catch (e) {
+    console.error(e);
+    setError(true);
+  } finally {
+    btn.classList.remove('spinning');
+  }
+}
+
+function parseDate(ts) {
+  if (!ts) return null;
+  try {
+    const d = new Date(ts);
+    if (isNaN(d)) return null;
+    return d;
+  } catch { return null; }
+}
+
+// ─── MONTH FILTER ──────────────────────────────────────────────────────
+function buildMonthFilter() {
+  const months = new Map();
+  allData.forEach(r => {
+    const key = `${r._date.getFullYear()}-${String(r._date.getMonth()+1).padStart(2,'0')}`;
+    if (!months.has(key)) {
+      months.set(key, r._date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }));
+    }
+  });
+
+  const sel = document.getElementById('monthSelect');
+  // Keep "Semua Data" option, rebuild rest
+  while (sel.options.length > 1) sel.remove(1);
+  [...months.entries()].sort((a,b) => b[0].localeCompare(a[0])).forEach(([key, label]) => {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+    sel.appendChild(opt);
+  });
+  sel.value = currentMonthFilter;
+}
+
+function applyFilter() {
+  currentMonthFilter = document.getElementById('monthSelect').value;
+  if (currentMonthFilter === 'all') {
+    filteredData = [...allData];
+  } else {
+    const [y, m] = currentMonthFilter.split('-').map(Number);
+    filteredData = allData.filter(r => r._date.getFullYear() === y && r._date.getMonth()+1 === m);
+  }
+
+  updateDateRange();
+  renderDashboard();
+}
+
+function updateDateRange() {
+  const el = document.getElementById('dateRange');
+  if (filteredData.length === 0) { el.textContent = 'Tidak ada data'; return; }
+  const dates = filteredData.map(r => r._date);
+  const min = new Date(Math.min(...dates));
+  const max = new Date(Math.max(...dates));
+  const fmt2 = d => d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  el.textContent = `${fmt2(min)} – ${fmt2(max)} · ${filteredData.length} transaksi`;
+}
+
+// ─── RENDER DASHBOARD ──────────────────────────────────────────────────
+function renderDashboard() {
+  if (filteredData.length === 0 && allData.length > 0) {
+    // Show empty state inside dashboard
+    document.getElementById('dashboard').style.display = 'block';
+    renderSummary({pengeluaran:0, reimbursePending:0, pendapatan:0, reimburseCair:0});
+    renderCashflow(0);
+    document.getElementById('catList').innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>Tidak ada data untuk bulan ini</div>';
+    document.getElementById('reimburseList').innerHTML = '';
+    document.getElementById('reimburseTotal').textContent = fmt(0);
+    document.getElementById('txnList').innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>Tidak ada transaksi untuk bulan ini</div>';
+    return;
+  }
+
+  // Compute sums
+  const sums = { pengeluaran: 0, reimbursePending: 0, pendapatan: 0, reimburseCair: 0 };
+  filteredData.forEach(r => {
+    if (r._type === 'PENGELUARAN_PRIBADI') sums.pengeluaran += r._amount;
+    else if (r._type === 'REIMBURSE_PENDING') sums.reimbursePending += r._amount;
+    else if (r._type === 'PENDAPATAN') sums.pendapatan += r._amount;
+    else if (r._type === 'REIMBURSE_CAIR') sums.reimburseCair += r._amount;
+  });
+
+  renderSummary(sums);
+  const net = sums.pendapatan + sums.reimburseCair - sums.pengeluaran;
+  renderCashflow(net, sums);
+  renderCategories(filteredData);
+  renderReiburse(filteredData, sums.reimbursePending);
+  txnPage = 20;
+  renderTransactions();
+}
+
+function renderSummary(s) {
+  document.getElementById('valPengeluaran').textContent = fmt(s.pengeluaran);
+  document.getElementById('valReimbursePending').textContent = fmt(s.reimbursePending);
+  document.getElementById('valPendapatan').textContent = fmt(s.pendapatan);
+  document.getElementById('valReimburseCair').textContent = fmt(s.reimburseCair);
+}
+
+function renderCashflow(net, sums) {
+  const el = document.getElementById('cashflowValue');
+  const badge = document.getElementById('cashflowBadge');
+  const bar = document.getElementById('cashflowBar');
+  const surplus = net >= 0;
+
+  el.textContent = fmt(Math.abs(net));
+  el.className = 'cashflow-value ' + (surplus ? 'surplus' : 'defisit');
+  badge.textContent = surplus ? '▲ Surplus' : '▼ Defisit';
+  badge.className = 'cashflow-badge ' + (surplus ? 'surplus' : 'defisit');
+  bar.className = 'cashflow-bar-fill ' + (surplus ? 'surplus' : 'defisit');
+
+  if (sums) {
+    const max = Math.max(sums.pengeluaran, sums.pendapatan + sums.reimburseCair, 1);
+    const pct = Math.min(100, Math.round((Math.abs(net) / max) * 100));
+    setTimeout(() => { bar.style.width = pct + '%'; }, 100);
+  }
+}
+
+let doughnutChart = null;
+
+function renderCategories(data) {
+  const COLORS = ['#C0392B','#E67E22','#F1C40F','#27AE60','#2980B9','#8E44AD','#16A085','#D35400','#2C3E50','#7F8C8D'];
+  const catMap = {};
+  let total = 0;
+  data.filter(r => r._type === 'PENGELUARAN_PRIBADI').forEach(r => {
+    const k = r['Jenis Transaksi'] || 'Lainnya';
+    catMap[k] = (catMap[k] || 0) + r._amount;
+    total += r._amount;
+  });
+
+  document.getElementById('doughnutTotal').textContent = fmt(total);
+  const sorted = Object.entries(catMap).sort((a,b) => b[1]-a[1]);
+
+  if (sorted.length === 0) {
+    document.getElementById('doughnutLegend').innerHTML = '<div class="empty-state">Tidak ada pengeluaran pribadi</div>';
+    return;
+  }
+
+  const labels = sorted.map(([k]) => k);
+  const values = sorted.map(([,v]) => v);
+  const colors = sorted.map((_,i) => COLORS[i % COLORS.length]);
+
+  const ctx = document.getElementById('doughnutChart').getContext('2d');
+  if (doughnutChart) doughnutChart.destroy();
+  doughnutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
+    options: {
+      cutout: '65%',
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: ctx => ` ${fmt(ctx.raw)} (${Math.round(ctx.raw/total*100)}%)` }
+      }},
+      animation: { animateRotate: true, duration: 700 }
+    }
+  });
+
+  document.getElementById('doughnutLegend').innerHTML = sorted.map(([name, amt], i) => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${colors[i]}"></div>
+      <div class="legend-name">${escHtml(name)}</div>
+      <div class="legend-right">
+        <div class="legend-amt">${fmt(amt)}</div>
+        <div class="legend-pct">${Math.round(amt/total*100)}%</div>
+      </div>
+    </div>`).join('');
+}
+
+function switchPage(page) {
+  document.getElementById('pagePribadi').classList.toggle('active', page === 'pribadi');
+  document.getElementById('pageReimburse').classList.toggle('active', page === 'reimburse');
+  document.getElementById('navPribadi').classList.toggle('active', page === 'pribadi');
+  document.getElementById('navReimburse').classList.toggle('active', page === 'reimburse');
+}
+
+function renderReiburse(data, totalPending) {
+  document.getElementById('reimburseTotal').textContent = fmt(totalPending);
+
+  const pending = data.filter(r => r._type === 'REIMBURSE_PENDING');
+  const cair = data.filter(r => r._type === 'REIMBURSE_CAIR');
+  const el = document.getElementById('reimburseList');
+
+  const items = [
+    ...pending.map(r => ({ r, cls: 'pending', badge: 'Pending' })),
+    ...cair.map(r => ({ r, cls: 'cair', badge: 'Cair' }))
+  ];
+
+  if (items.length === 0) {
+    el.innerHTML = '<div class="empty-state">Tidak ada transaksi reimburse</div>';
+    return;
+  }
+
+  el.innerHTML = items.map(({ r, cls, badge }) => `
+    <div class="reimburse-item ${cls}">
+      <div class="reimburse-item-left">
+        <div class="reimburse-item-date">${fmtDate(r._date)}</div>
+        <div class="reimburse-item-desc">${escHtml(r['Keterangan Tambahan'] || r['Jenis Transaksi'] || '—')}</div>
+      </div>
+      <div class="reimburse-item-right">
+        <div class="reimburse-item-amount">${fmt(r._amount)}</div>
+        <span class="badge ${cls}">${badge}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── TRANSACTIONS ──────────────────────────────────────────────────────
+function renderTransactions() {
+  const search = (document.getElementById('txnSearch').value || '').toLowerCase();
+  let data = filteredData.filter(r => r._type === 'PENGELUARAN_PRIBADI');
+
+  if (search) {
+    data = data.filter(r =>
+      (r['Keterangan Tambahan'] || '').toLowerCase().includes(search) ||
+      (r['Jenis Transaksi'] || '').toLowerCase().includes(search) ||
+      (r['Sumber Dana'] || '').toLowerCase().includes(search)
+    );
+  }
+
+  const el = document.getElementById('txnList');
+  const showMore = document.getElementById('btnShowMore');
+
+  if (data.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div>Tidak ada transaksi ditemukan</div>';
+    showMore.style.display = 'none';
+    return;
+  }
+
+  const shown = data.slice(0, txnPage);
+  el.innerHTML = shown.map(r => txnRow(r)).join('');
+
+  if (data.length > txnPage) {
+    showMore.style.display = 'block';
+    showMore.textContent = `Tampilkan Lebih Banyak (${data.length - txnPage} lagi)`;
+  } else {
+    showMore.style.display = 'none';
+  }
+}
+
+function showMoreTxn() {
+  txnPage += 20;
+  renderTransactions();
+}
+
+function txnRow(r) {
+  const type = r._type;
+  const icons = { PENGELUARAN_PRIBADI: '💸', REIMBURSE_PENDING: '🔄', REIMBURSE_CAIR: '✅', PENDAPATAN: '💰' };
+  const colorMap = { PENGELUARAN_PRIBADI: 'red', REIMBURSE_PENDING: 'blue', REIMBURSE_CAIR: 'green', PENDAPATAN: 'green2' };
+  const badgeMap = { PENGELUARAN_PRIBADI: {cls:'pribadi',txt:'Pribadi'}, REIMBURSE_PENDING: {cls:'pending',txt:'Pending'}, REIMBURSE_CAIR: {cls:'cair',txt:'Cair'}, PENDAPATAN: {cls:'income',txt:'Income'} };
+  const color = colorMap[type];
+  const badge = badgeMap[type];
+  const desc = r['Keterangan Tambahan'] || r['Jenis Transaksi'] || '—';
+  const cat = r['Jenis Transaksi'] || '';
+  const sumber = r['Sumber Dana'] ? `· ${r['Sumber Dana']}` : '';
+
+  return `
+    <div class="txn-item">
+      <div class="txn-icon ${color}">${icons[type]}</div>
+      <div class="txn-body">
+        <div class="txn-desc">${escHtml(desc)}</div>
+        <div class="txn-meta">
+          <span class="txn-date">${fmtDate(r._date)}</span>
+          ${cat ? `<span class="txn-cat">${escHtml(cat)}</span>` : ''}
+          ${sumber ? `<span class="txn-date">${escHtml(sumber)}</span>` : ''}
+        </div>
+      </div>
+      <div class="txn-right">
+        <div class="txn-amount ${color}">${type === 'PENGELUARAN_PRIBADI' ? '−' : '+'}${fmt(r._amount)}</div>
+        <span class="badge ${badge.cls}">${badge.txt}</span>
+      </div>
+    </div>`;
+}
+
+// ─── HELPERS ───────────────────────────────────────────────────────────
+function fmtDate(d) {
+  if (!d) return '—';
+  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── UI STATE ──────────────────────────────────────────────────────────
+function setLoading(v) {
+  document.getElementById('skeletonState').style.display = v ? 'block' : 'none';
+  document.getElementById('errorState').style.display = 'none';
+  if (!v) document.getElementById('dashboard').style.display = 'block';
+}
+
+function setError(v) {
+  document.getElementById('skeletonState').style.display = 'none';
+  document.getElementById('errorState').style.display = v ? 'block' : 'none';
+  document.getElementById('dashboard').style.display = 'none';
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────
+fetchData();
+</script>
+</body>
+</html>
