@@ -1077,7 +1077,7 @@ function renderReiburse(data, totalPending) {
 // ─── TRANSACTIONS ──────────────────────────────────────────────────────
 function renderTransactions() {
   const search = (document.getElementById('txnSearch').value || '').toLowerCase();
-  let data = filteredData.filter(r => r._type === 'PENGELUARAN_PRIBADI');
+  let data = [...filteredData];
 
   if (search) {
     data = data.filter(r =>
