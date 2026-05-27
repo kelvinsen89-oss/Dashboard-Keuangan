@@ -827,7 +827,7 @@ function parseAmount(val) {
 
 // ─── CLASSIFY ──────────────────────────────────────────────────────────
 function classify(row) {
-  const jenis = (row['Jenis Transaksi'] || '').trim();
+  const jenis = (row['Jenis Pengeluaran'] || '').trim();
   const keterangan = (row['Keterangan Tambahan'] || '').trim();
   const reimburse = row['Reimbursement'];
   const isCentang = reimburse === true || String(reimburse).trim().toUpperCase() === 'TRUE' || reimburse === 1;
@@ -835,7 +835,7 @@ function classify(row) {
   if (keterangan.startsWith('[IN] Reimburse')) return 'REIMBURSE_CAIR';
   if (keterangan.startsWith('[IN] Pendapatan')) return 'PENDAPATAN';
   if (jenis.includes('avail. reimburse')) {
-    return isCentang ? 'REIMBURSE_CAIR' : 'REIMBURSE_PENDING';
+    return isCentang ? 'REIMBURSE_PENDING' : 'PENGELUARAN_PRIBADI';
   }
   return 'PENGELUARAN_PRIBADI';
 }
@@ -994,7 +994,7 @@ function renderCategories(data) {
   const catMap = {};
   let total = 0;
   data.filter(r => r._type === 'PENGELUARAN_PRIBADI').forEach(r => {
-    const k = r['Jenis Transaksi'] || 'Lainnya';
+    const k = r['Jenis Pengeluaran'] || 'Lainnya';
     catMap[k] = (catMap[k] || 0) + r._amount;
     total += r._amount;
   });
@@ -1064,7 +1064,7 @@ function renderReiburse(data, totalPending) {
     <div class="reimburse-item ${cls}">
       <div class="reimburse-item-left">
         <div class="reimburse-item-date">${fmtDate(r._date)}</div>
-        <div class="reimburse-item-desc">${escHtml(r['Keterangan Tambahan'] || r['Jenis Transaksi'] || '—')}</div>
+        <div class="reimburse-item-desc">${escHtml(r['Keterangan Tambahan'] || r['Jenis Pengeluaran'] || '—')}</div>
       </div>
       <div class="reimburse-item-right">
         <div class="reimburse-item-amount">${fmt(r._amount)}</div>
@@ -1082,7 +1082,7 @@ function renderTransactions() {
   if (search) {
     data = data.filter(r =>
       (r['Keterangan Tambahan'] || '').toLowerCase().includes(search) ||
-      (r['Jenis Transaksi'] || '').toLowerCase().includes(search) ||
+      (r['Jenis Pengeluaran'] || '').toLowerCase().includes(search) ||
       (r['Sumber Dana'] || '').toLowerCase().includes(search)
     );
   }
@@ -1119,8 +1119,8 @@ function txnRow(r) {
   const badgeMap = { PENGELUARAN_PRIBADI: {cls:'pribadi',txt:'Pribadi'}, REIMBURSE_PENDING: {cls:'pending',txt:'Pending'}, REIMBURSE_CAIR: {cls:'cair',txt:'Cair'}, PENDAPATAN: {cls:'income',txt:'Income'} };
   const color = colorMap[type];
   const badge = badgeMap[type];
-  const desc = r['Keterangan Tambahan'] || r['Jenis Transaksi'] || '—';
-  const cat = r['Jenis Transaksi'] || '';
+  const desc = r['Keterangan Tambahan'] || r['Jenis Pengeluaran'] || '—';
+  const cat = r['Jenis Pengeluaran'] || '';
   const sumber = r['Sumber Dana'] ? `· ${r['Sumber Dana']}` : '';
 
   return `
