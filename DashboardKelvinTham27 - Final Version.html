@@ -831,10 +831,9 @@ function classify(row) {
   const reimburse = row['Reimbursement'];
   const isCentang = reimburse === true || String(reimburse).trim().toUpperCase() === 'TRUE' || reimburse === 1;
 
-  if (jenis.startsWith('[IN] Reimburse')) return 'REIMBURSE_CAIR';
   if (jenis.startsWith('[IN] Pendapatan')) return 'PENDAPATAN';
   if (jenis.includes('avail. reimburse')) {
-    return isCentang ? 'REIMBURSE_PENDING' : 'PENGELUARAN_PRIBADI';
+    return isCentang ? 'REIMBURSE_CAIR' : 'REIMBURSE_PENDING';
   }
   return 'PENGELUARAN_PRIBADI';
 }
@@ -1076,7 +1075,7 @@ function renderReiburse(data, totalPending) {
 // ─── TRANSACTIONS ──────────────────────────────────────────────────────
 function renderTransactions() {
   const search = (document.getElementById('txnSearch').value || '').toLowerCase();
-  let data = [...filteredData];
+  let data = filteredData.filter(r => r._type === 'PENGELUARAN_PRIBADI' || r._type === 'PENDAPATAN');
 
   if (search) {
     data = data.filter(r =>
